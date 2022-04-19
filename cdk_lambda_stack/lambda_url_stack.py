@@ -1,4 +1,3 @@
-from aws_cdk import CfnOutput as Output
 from aws_cdk import CfnResource, Stack
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_lambda_python_alpha as _lambda_python
@@ -33,7 +32,8 @@ class LambdaStack(Stack):
             function_name="ExampleLambdaFunctionURL",
         )
 
-        cfnFuncUrl = CfnResource(
+        # Set up the Lambda Function URL
+        CfnResource(
             scope=self,
             id="lambdaFuncUrl",
             type="AWS::Lambda::Url",
@@ -44,6 +44,7 @@ class LambdaStack(Stack):
             },
         )
 
+        # Give everyone permission to invoke the Function URL
         CfnResource(
             scope=self,
             id="funcURLPermission",
@@ -52,11 +53,6 @@ class LambdaStack(Stack):
                 "FunctionName": self.example_lambda.function_name,
                 "Principal": "*",
                 "Action": "lambda:InvokeFunctionUrl",
-                "FunctionAuthType": "NONE",
+                "FunctionUrlAuthType": "NONE",
             },
-        )
-        Output(
-            scope=self,
-            id="funcURLOutput",
-            value=str(cfnFuncUrl.get_att(attribute_name="FunctionUrl")),
         )

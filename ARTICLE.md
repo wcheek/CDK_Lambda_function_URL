@@ -1,16 +1,10 @@
-# Deploying an API fronted Lambda function using AWS CDK
+# AWS Lambda Function URLs with AWS CDK
 
-This project aims to be a minimum working example of deploying a Lambda function accessible through an API Gateway using Python flavored AWS CDK. The API allows you to pass data directly into the Lambda function and get a response back with a result.
+AWS recently released a great new feature for Lambda: [AWS Lambda Function URLs](https://aws.amazon.com/blogs/aws/announcing-aws-lambda-function-urls-built-in-https-endpoints-for-single-function-microservices/)
 
-## What is possible using this pattern?
+Function URLs promise to replace the API Gateway Lambda Proxy pattern as they allow a simpler way to do `HTTP GET` operations on your Lambda functions.
 
-1)   Pass data to the function, get a machine learning prediction back.
-2)   Request a file stored on `S3`, get a secure link back.
-3)   Send parameters to the function, get complex calculations back.
-4)   Database retrieval.
-     etc...
-
-The [Github repository can be found here.](https://github.com/wcheek/CDK_Lambda_API)
+The [Github repository can be found here.](https://github.com/wcheek/CDK_Lambda_function_URL)
 
 ## CDK init & deploy
 
@@ -18,7 +12,7 @@ I won’t cover setting up CDK and bootstrapping the environment. You can find t
 
 Once you have set up CDK, we need to set up the project:
 
-1. `mkdir CDK_Lambda_API && cd CDK_Lambda_API`
+1. `mkdir CDK_Lambda_URL && cd CDK_Lambda_URL`
 
 2. `cdk init --language python`
 
