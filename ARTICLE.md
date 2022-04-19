@@ -31,53 +31,63 @@ Once you have set up CDK, we need to set up the project:
 This stack will deploy a lambda function using `aws-lambda-python-alpha` to build the function with all its additional libraries using a docker container. Make sure to have Docker installed and the daemon running before running `cdk deploy`.
 
 ```python
-# lambda_api_stack.py
-
-from aws_cdk import Stack
-from aws_cdk import aws_apigateway as apigw
+from aws_cdk import CfnResource, Stack
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_lambda_python_alpha as _lambda_python
 from constructs import Construct
 
 
-class LambdaModelPredictionsStack(Stack):
+class LambdaStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # in __init__ I like to initialize the infrastructure I will be creating
-        self.prediction_lambda = None
-        self.gateway = None
-        # Additional useful infrastructure might include an S3 bucket,
-        # an EFS store, SQS queue, etc.
+        self.example_lambda = None
 
         self.build_infrastructure()
 
     def build_infrastructure(self):
         # For convenience, consolidate infrastructure construction
         self.build_lambda()
-        self.build_gateway()
 
     def build_lambda(self):
-        self.prediction_lambda = _lambda_python.PythonFunction(
+        self.example_lambda = _lambda_python.PythonFunction(
             scope=self,
-            id="PredictionLambda",
+            id="ExampleLambda",
             # entry points to the directory
-            entry="lambda_funcs/APILambda",
+            entry="lambda_funcs/LambdaURL",
             # index is the file name
-            index="API_lambda.py",
+            index="URL_lambda.py",
             # handler is the function entry point name in the lambda.py file
             handler="handler",
             runtime=_lambda.Runtime.PYTHON_3_9,
             # name of function on AWS
-            function_name="ExampleAPILambda",
+            function_name="ExampleLambdaFunctionURL",
         )
 
-    def build_gateway(self):
-        # This will attach an API gateway as a trigger to our
-        # lambda function above. The return of the handler function also
-        # gets routed back to the API gateway.
-        self.gateway = apigw.LambdaRestApi(
-            self, "Endpoint", handler=self.prediction_lambda
+        # Set up the Lambda Function URL
+        CfnResource(
+            scope=self,
+            id="lambdaFuncUrl",
+            type="AWS::Lambda::Url",
+            properties={
+                "TargetFunctionArn": self.example_lambda.function_arn,
+                "AuthType": "NONE",
+                "Cors": {"AllowOrigins": ["*"]},
+            },
+        )
+
+        # Give everyone permission to invoke the Function URL
+        CfnResource(
+            scope=self,
+            id="funcURLPermission",
+            type="AWS::Lambda::Permission",
+            properties={
+                "FunctionName": self.example_lambda.function_name,
+                "Principal": "*",
+                "Action": "lambda:InvokeFunctionUrl",
+                "FunctionUrlAuthType": "NONE",
+            },
         )
 
 ```
@@ -87,8 +97,6 @@ class LambdaModelPredictionsStack(Stack):
 You can see [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html) an example of the response format the API gateway is expecting.
 
 ```python
-# lambda_funcs/APILambda/API_lambda.py
-
 from logging import getLogger
 
 logger = getLogger()
@@ -111,13 +119,13 @@ def handler(event, context):
 
 Now you can do `cdk deploy`. The lambda function will be built using docker and uploaded to the bootstrapped ECR repository. Once the project is built, it will synth a `CloudFormation` template and begin deploying the infrastructure. You can watch your stack deploy on `AWS CloudFormation` - it should be quick since the infrastructure is relatively simple.
 
-Once the process is completed, CDK will output the endpoint URL of the API Gateway:
+So far I have unfortunately not found a way to output the Function URL using `AWS CDK` (please let me know in comments if you know how), so unfortunately once the process is completed it will be necessary to navigate to your Lambda function on the `AWS Console` to find your `Lambda Function URL`
 
-![graphic](D:\Projects\Notes\My Articles\CDK_Lambda_API\Assets\graphic.png)
+![aws_console](D:\Projects\Notes\My Articles\2_CDK_Lambda_function_URL\Assets\aws_console.png)
 
 ## Query the API Gateway
 
-To query the API gateway and get a response back from your lambda function, just send a get request using `requests` or `Postman`
+To query the `Function URL` and get a response back from your lambda function, just send a `GET` request using `requests` or `Postman`
 
-![graphic2](D:\Projects\Notes\My Articles\CDK_Lambda_API\Assets\graphic2.png)
+![image-20220419164801774](D:\Projects\Notes\My Articles\2_CDK_Lambda_function_URL\Assets\image-20220419164801774.png)
 

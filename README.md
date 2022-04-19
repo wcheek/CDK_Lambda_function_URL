@@ -1,7 +1,7 @@
-# Deploy a machine learning prediction platform using the python flavored AWS CDK and API Gateway Proxy Integration With Lambda
+# Deploy a Lambda function with Function URL using AWS CDK
 
-This project quickly deploys an API Gateway fronted custom Lambda function.
-Through the API, the Lambda function can be queried by any web client to provide machine learning predictions and other tasks.
+This project quickly deploys a [Lambda Function URL](https://aws.amazon.com/blogs/aws/announcing-aws-lambda-function-urls-built-in-https-endpoints-for-single-function-microservices/) fronted custom Lambda function using AWS CDK.
+Through the Function URL, the Lambda function can be queried by any web client to provide machine learning predictions and other tasks.
 
 ## If starting from scratch:
 
