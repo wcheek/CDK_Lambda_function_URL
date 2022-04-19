@@ -3,6 +3,8 @@
 This project quickly deploys a [Lambda Function URL](https://aws.amazon.com/blogs/aws/announcing-aws-lambda-function-urls-built-in-https-endpoints-for-single-function-microservices/) fronted custom Lambda function using AWS CDK.
 Through the Function URL, the Lambda function can be queried by any web client to provide machine learning predictions and other tasks.
 
+The Dev.to article [can be found here](https://dev.to/wesleycheek/aws-lambda-function-urls-with-aws-cdk-58ih)
+
 ## If starting from scratch:
 
 1) `mkdir project && cd project`
