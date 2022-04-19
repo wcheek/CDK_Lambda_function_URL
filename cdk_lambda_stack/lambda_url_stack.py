@@ -1,4 +1,5 @@
-from aws_cdk import Stack
+from aws_cdk import CfnOutput as Output
+from aws_cdk import CfnResource, Stack
 from aws_cdk import aws_apigateway as apigw
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_lambda_python_alpha as _lambda_python
@@ -10,7 +11,7 @@ class LambdaStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # in __init__ I like to initialize the infrastructure I will be creating
-        self.prediction_lambda = None
+        self.example_lambda = None
         self.gateway = None
         # Additional useful infrastructure might include an S3 bucket,
         # an EFS store, SQS queue, etc.
@@ -23,9 +24,9 @@ class LambdaStack(Stack):
         self.build_gateway()
 
     def build_lambda(self):
-        self.prediction_lambda = _lambda_python.PythonFunction(
+        self.example_lambda = _lambda_python.PythonFunction(
             scope=self,
-            id="PredictionLambda",
+            id="ExampleLambda",
             # entry points to the directory
             entry="lambda_funcs/APILambda",
             # index is the file name
@@ -34,13 +35,32 @@ class LambdaStack(Stack):
             handler="handler",
             runtime=_lambda.Runtime.PYTHON_3_9,
             # name of function on AWS
-            function_name="ExampleAPILambda",
+            function_name="ExampleLambdaFunctionURL",
         )
 
-    def build_gateway(self):
-        # This will attach an API gateway as a trigger to our
-        # lambda function above. The return of the handler function also
-        # gets routed back to the API gateway.
-        self.gateway = apigw.LambdaRestApi(
-            self, "Endpoint", handler=self.prediction_lambda
+        cfnFuncUrl = CfnResource(
+            scope=self,
+            id="lambdaFuncUrl",
+            type="AWS::Lambda::Url",
+            properties={
+                "TargetFunctionArn": self.example_lambda.functionArn,
+                "AuthType": "NONE",
+                "Cors": {"AllowOrigins": ["*"]},
+            },
+        )
+
+        CfnResource(
+            scope=self,
+            id="funcURLPermission",
+            properties={
+                "FunctionName": self.example_lambda.function_name,
+                "Principal": "*",
+                "Action": "lambda:InvokeFunctionUrl",
+                "FunctionAuthType": "NONE",
+            },
+        )
+        Output(
+            scope=self,
+            id="funcURLOutput",
+            value=cfnFuncUrl.get_att("FunctionUrl"),
         )
